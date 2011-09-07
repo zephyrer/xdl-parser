@@ -1,0 +1,461 @@
+/* XDL.jj -- reading in the  Xilinx Design Language files */
+options {
+    STATIC = false;
+//    DEBUG_TOKEN_MANAGER = true;
+}
+
+
+PARSER_BEGIN(XDLParser)
+package nl.tudelft.et.ce.xdlparser.parser;
+
+import nl.tudelft.et.ce.xdlparser.model.*;
+import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.HashMap;
+
+public class XDLParser {
+
+    private Design design;
+    public Design getDesign()
+        throws ParseException, TokenMgrError
+    {
+        // parse top level element
+    	return XDLSections();
+    }
+}
+
+PARSER_END(XDLParser)
+
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+/* COMMENTS */
+MORE :
+{
+  "#" : IN_SINGLE_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+TOKEN :
+{
+    <ROUTETHROUGH:  "_ROUTETHROUGH" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SKIP :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+/* SEPARATORS */
+TOKEN :
+{
+    < SEMICOLON:    ";">
+|   < COMMA:        ",">
+|   < COLON:        ":">
+}
+/* KEYWORDS */
+TOKEN :
+{
+    < CFG:       "cfg" > 
+
+|   < VCC:       "vcc" >
+|   < VDD:       "vdd" >
+|   < NET:       "net">
+|   < GND:       "gnd" >
+|   < PIP:       "pip" > 
+
+|   < INST:      "inst" >
+|   < WIRE:      "wire" >
+|   < POWER:     "power" >
+|   < INPIN:     "inpin" >
+|   < OUTPIN:    "outpin" >
+|   < DESIGN:    "design" >
+|   < PLACED:    "placed" > 
+|   < BONDED:    "bonded" > 
+|   < GROUND:    "ground" >
+|   < INSTANCE:  "instance" >
+|   < UNPLACED:  "unplaced" > 
+|   < UNBONDED:  "unbonded" > 
+
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < STRING_LITERAL:
+      "\""
+      ( "\\" "\"" | ~["\""] )*
+      "\""
+  >
+}
+
+/* IDENTIFIERS */
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [ "a"-"z", "A"-"Z",
+       "_"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "0"-"9",
+       "-",
+       "."
+      ]
+  >
+}
+
+TOKEN : /* PIP DIRECTIONS */
+{
+  < BIDIR_UNBUF: "==" >
+| < BIDIR_ONEBUF: "=>" >
+| < BIDIR_BUF: "=-" >
+| < DIR_BUF: "->" >
+}
+
+/********************************
+ * THE XDL GRAMMAR STARTS HERE *
+ *******************************/
+
+Design XDLSections() :
+{
+	Instance instance;
+	Net net;
+}
+{
+    design=DesignDeclaration()    
+    ( instance=InstanceDeclaration() { design.addInstance(instance); } )*
+    ( net=NetDeclaration()           { design.addNet(net); } )*
+    <EOF>
+    {
+    	return design;
+    }
+}
+
+Design DesignDeclaration() :
+{
+	Token token;
+	String name;
+	String part;
+	String ncd_version;
+	String cfg = "";
+}
+{
+    "design"
+    token=<STRING_LITERAL>
+    {
+		name = token.image.substring(1, token.image.length() - 1);    	   
+    }
+    token=<IDENTIFIER>
+    {
+    	part = token.image;
+    }
+    token=<IDENTIFIER>
+    {
+    	ncd_version=token.image;
+        token = null;
+    }
+    ("," cfg=ConfigClause())?
+    ";"
+    {
+    	return new Design(name,part,ncd_version,cfg);
+    }
+}
+
+Instance InstanceDeclaration() :
+{
+	Token token;
+	String name, sitedef,site;
+	String cfg = "";
+	Tile tile;
+	boolean bonded = true; // if not specified... it is bonded.
+
+	Instance instance;	
+}
+{
+    (<INSTANCE>|<INST>)
+    token=<STRING_LITERAL>
+    {
+		name = token.image.substring(1, token.image.length() - 1);    	   
+    }
+    token=<STRING_LITERAL>
+    {
+		sitedef = token.image.substring(1, token.image.length() - 1);    	   
+        token = null;
+    }
+    "," 
+    (
+        "placed"
+        token=<IDENTIFIER>
+        {
+        	tile = design.getTile(token.image); 
+        }
+        token=<IDENTIFIER>
+        {
+        	site = token.image;
+            token = null;
+        }
+    	("," cfg=ConfigClause() )?
+    	{
+      		instance = new PlacedInstance(name, sitedef, cfg, tile, site);
+    	}        
+    |   ","
+    	"unplaced"
+    	("bonded" { bonded=true; } | "unbonded" { bonded=false; })?
+    	("," cfg=ConfigClause() )?
+    	{
+      		instance = new UnplacedInstance(name, sitedef, cfg, bonded);
+    	}    	
+    )
+    ";"
+    {
+    	return instance;
+    }
+}
+
+Net NetDeclaration() :
+{
+	Net net;
+	String name;
+	Token token;
+	ENetType type = ENetType.WIRE;
+}
+{
+    "net"
+    token=<STRING_LITERAL>
+    {
+		name = token.image.substring(1, token.image.length() - 1);    	   
+        token = null;
+    }      
+    (type=NetType())? ","
+    (
+      	net=InternalNetDeclaration(name,type)
+        |
+        net=ExternalNetDeclaration(name,type)
+    )
+    ";"
+    {
+    	return net;
+    }
+}
+
+Net ExternalNetDeclaration(String name, ENetType type) :
+{
+	String cfg;
+}
+{
+        cfg=ConfigClause()
+        (",")?
+        {
+          return new ExternalNet(name, type, cfg);
+        }
+}
+Net InternalNetDeclaration(String name, ENetType type) :
+{
+  	InternalNet net;
+  	Pin outpin;
+	Pin pin;
+	Pip pip;
+    RouteThrough rt;
+}
+{
+        outpin=OutpinDeclaration()
+        {
+        	net = new InternalNet(name, outpin, type);
+        }
+        ( pin=InpinDeclaration() { net.addInpin(pin); } )+
+        ( pip=PipDeclaration()   { net.addPip(pip);   } 
+          (rt=RouteThroughDeclaration() { net.addRouteThrough(rt); } )? 
+        )*
+
+        {
+			return net;
+        }
+}
+ENetType NetType() :
+{}
+{
+    <WIRE>
+    {
+      return ENetType.WIRE;
+    }
+|   (<POWER>|<VCC>|<VDD>)
+    {
+      return ENetType.POWER;
+    }
+|   (<GROUND>|<GND>)
+    {
+      return ENetType.GROUND;
+    }
+}
+
+Pin OutpinDeclaration() :
+{
+	String inst_name;
+	String inst_pin;
+	Token token;
+    Instance instance;
+}
+{
+    "outpin"
+    token=<STRING_LITERAL>
+    {
+    	inst_name = token.image.substring(1, token.image.length() - 1);    	   
+        instance = design.getInstanceByName(inst_name);
+    }      
+    token=<IDENTIFIER>
+    {
+    	inst_pin = token.image;
+        token = null;
+    }
+    ","
+    {
+		return new Pin(instance, inst_pin);
+    }
+}
+Pin InpinDeclaration() :
+{
+	String inst_name;
+	String inst_pin;
+	Token token;
+    Instance instance;
+}
+{
+    "inpin"
+    token=<STRING_LITERAL>
+    {
+    	inst_name = token.image.substring(1, token.image.length() - 1);    	   
+        instance = design.getInstanceByName(inst_name);
+    }      
+    token=<IDENTIFIER>
+    {
+    	inst_pin = token.image;
+        token = null;
+    }
+    ","
+    {
+		return new Pin(instance, inst_pin);
+    }
+}
+
+Pip PipDeclaration() :
+{
+   	Tile tile;
+  	Wire left,right;
+  	EPipDirection direction;
+  	Token token;
+}
+{
+    "pip"
+    token=<IDENTIFIER>
+    {
+      tile = design.getTile(token.image);
+    }
+    token=<IDENTIFIER>
+    {
+    	tile.addWire(token.image);
+    	left = tile.getWire(token.image);
+        token = null;
+    }
+    direction=PipDirection()
+    token=<IDENTIFIER>
+    {
+	  tile.addWire(token.image);
+      right = tile.getWire(token.image);
+      token = null;
+    }
+    ","
+    {
+      return new Pip(tile, left, right, direction);
+    } 
+}
+
+RouteThrough RouteThroughDeclaration() :
+{
+	String inst_name;
+    Instance instance;
+    Pin left, right;
+    EPipDirection direction;
+    Token token;
+}
+{
+    token=<ROUTETHROUGH>
+    ":"
+    <IDENTIFIER>
+    ":"
+    <IDENTIFIER>
+
+    token=<STRING_LITERAL>
+    {
+    	inst_name = token.image.substring(1, token.image.length() - 1);    	   
+        instance = design.getInstanceByName(inst_name);
+    }
+    token=<IDENTIFIER>
+    {
+    	left = new Pin(instance,token.image);
+        token = null;
+    }
+    direction=PipDirection()
+    token=<IDENTIFIER>
+    {
+    	right = new Pin(instance, token.image);
+        token = null;
+    }
+    {
+        return new RouteThrough(instance, left, right, direction);
+    } 
+}
+
+EPipDirection PipDirection() :
+{}
+{
+  <BIDIR_UNBUF>
+  {
+    return EPipDirection.BIDIR_UNBUF;
+  }
+| <BIDIR_ONEBUF>
+  {
+    return EPipDirection.BIDIR_ONEBUF;
+  }
+| <BIDIR_BUF>
+  {
+    return EPipDirection.BIDIR_BUF;
+  }
+| <DIR_BUF>
+  {
+    return EPipDirection.DIR_BUF;
+  }
+}
+
+String ConfigClause() :
+{
+	Token token;
+}
+{
+    "cfg"
+    token=<STRING_LITERAL>
+    {
+    	return token.image;
+	}
+}
