@@ -1,4 +1,91 @@
 ------------------------------------------------------------------------
+r3 | r.j.meeuws@gmail.com | 2011-09-07 22:36:33 +0200 (wo, 07 sep 2011) | 24 lines
+
+* Added author info and descs to all classes
+* updated changelog
+* added requirements in README
+
+M    ChangeLog
+M    src/nl/tudelft/et/ce/xdlparser/model/RouteThrough.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Instance.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Wire.java
+M    src/nl/tudelft/et/ce/xdlparser/model/EMeasureType.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Design.java
+M    src/nl/tudelft/et/ce/xdlparser/model/PlacedInstance.java
+M    src/nl/tudelft/et/ce/xdlparser/model/UnplacedInstance.java
+M    src/nl/tudelft/et/ce/xdlparser/model/InternalNet.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Pin.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Net.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Pip.java
+M    src/nl/tudelft/et/ce/xdlparser/model/ExternalNet.java
+M    src/nl/tudelft/et/ce/xdlparser/model/ENetType.java
+M    src/nl/tudelft/et/ce/xdlparser/model/Tile.java
+M    src/nl/tudelft/et/ce/xdlparser/model/EPipDirection.java
+M    src/nl/tudelft/et/ce/xdlparser/Main.java
+M    src/nl/tudelft/et/ce/xdlparser/parser/XDL.jj
+M    README
+
+------------------------------------------------------------------------
+r2 | r.j.meeuws@gmail.com | 2011-09-07 21:58:23 +0200 (wo, 07 sep 2011) | 57 lines
+
+* first check in of the XDL Parser
+
+A    ChangeLog
+A    src
+A    src/jargs
+A    src/jargs/gnu
+AM   src/jargs/gnu/CmdLineParser$IllegalOptionValueException.class
+AM   src/jargs/gnu/CmdLineParser$Option$DoubleOption.class
+AM   src/jargs/gnu/CmdLineParser$UnknownSuboptionException.class
+AM   src/jargs/gnu/CmdLineParser$Option$IntegerOption.class
+AM   src/jargs/gnu/CmdLineParser$Option$LongOption.class
+AM   src/jargs/gnu/CmdLineParser$Option$BooleanOption.class
+AM   src/jargs/gnu/CmdLineParser$UnknownOptionException.class
+AM   src/jargs/gnu/CmdLineParser$OptionException.class
+AM   src/jargs/gnu/CmdLineParser$Option.class
+AM   src/jargs/gnu/CmdLineParser$NotFlagException.class
+AM   src/jargs/gnu/CmdLineParser.class
+AM   src/jargs/gnu/CmdLineParser$Option$StringOption.class
+A    src/manifest.mf
+A    src/nl
+A    src/nl/tudelft
+A    src/nl/tudelft/et
+A    src/nl/tudelft/et/ce
+A    src/nl/tudelft/et/ce/xdlparser
+A    src/nl/tudelft/et/ce/xdlparser/model
+A    src/nl/tudelft/et/ce/xdlparser/model/RouteThrough.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Instance.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Wire.java
+A    src/nl/tudelft/et/ce/xdlparser/model/EMeasureType.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Design.java
+A    src/nl/tudelft/et/ce/xdlparser/model/PlacedInstance.java
+A    src/nl/tudelft/et/ce/xdlparser/model/UnplacedInstance.java
+A    src/nl/tudelft/et/ce/xdlparser/model/InternalNet.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Node.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Net.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Pin.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Pip.java
+A    src/nl/tudelft/et/ce/xdlparser/model/ExternalNet.java
+A    src/nl/tudelft/et/ce/xdlparser/model/Tile.java
+A    src/nl/tudelft/et/ce/xdlparser/model/ENetType.java
+A    src/nl/tudelft/et/ce/xdlparser/model/EPipDirection.java
+A    src/nl/tudelft/et/ce/xdlparser/Main.java
+A    src/nl/tudelft/et/ce/xdlparser/parser
+A    src/nl/tudelft/et/ce/xdlparser/parser/XDL.jj
+A    src/Makefile
+A    bin
+A    COPYING
+A    reqs
+A    reqs/javacc-5.0
+A    reqs/javacc-5.0/LICENSE
+A    reqs/javacc-5.0/bin
+A    reqs/javacc-5.0/bin/lib
+AM   reqs/javacc-5.0/bin/lib/javacc.jar
+AM   reqs/javacc-5.0/bin/javacc
+A    Makefile
+A    README
+
+------------------------------------------------------------------------
 r1 | (no author) | 2011-09-07 21:31:26 +0200 (wo, 07 sep 2011) | 1 line
 
 Initial directory structure.
