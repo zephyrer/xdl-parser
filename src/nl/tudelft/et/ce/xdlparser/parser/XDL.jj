@@ -1,4 +1,21 @@
-/* XDL.jj -- reading in the  Xilinx Design Language files */
+/*
+ * XDL.jj
+ * reading in the  Xilinx Design Language files. This file uses the javacc
+ * compiler compiler to generate a parser for XDL files. Which reads XDL files
+ * and generates a representation using the data model in
+ * nl.tudelft.et.ce.xdlparser.model
+ *
+ * Copyright (C) 2009, 2011
+ * - R. J. Meeuws <r.j.meeuws@gmail.com>
+ * - ...
+ * 
+ * Notice
+ * -----------
+ * The XDL Parser is free software.  See the files whose names start with
+ * COPYING for copying permission.  The manuals, and some of the runtime
+ * libraries, are under different terms; see the individual source files for
+ * details.
+ */
 options {
     STATIC = false;
 //    DEBUG_TOKEN_MANAGER = true;
