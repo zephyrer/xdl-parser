@@ -1,0 +1,1 @@
+This project aims to provide a java platform for working with Xilinx XDL files. The program parses XDL files and currently presents some statistics on the wires, wire segments, pips, etc. The grammar is not complete in some parts (additional reverse engineering is required) and help is welcome!
